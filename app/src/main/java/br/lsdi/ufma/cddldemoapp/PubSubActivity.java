@@ -1,18 +1,35 @@
 package br.lsdi.ufma.cddldemoapp;
 
+import android.app.AlertDialog;
 import android.os.Bundle;
+import android.os.Handler;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ListView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import org.apache.commons.lang3.StringUtils;
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
 import org.greenrobot.eventbus.ThreadMode;
+
+import java.io.BufferedInputStream;
+import java.io.BufferedReader;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.List;
 
 import br.ufma.lsdi.cddl.CDDL;
 import br.ufma.lsdi.cddl.listeners.IMonitorListener;
@@ -33,6 +50,19 @@ public class PubSubActivity extends AppCompatActivity {
     private Publisher pub;
     private Subscriber sub;
     private EventBus eb;
+    MonitorPrincipal monit = new MonitorPrincipal();
+
+    private String caminho = "/storage/emulated/0/Download/pacientes/055/05500001.csv";
+    InputStream is;
+    BufferedReader reader;
+    Message msgem = new Message();
+    String ms;
+    public Handler handler = new Handler();
+    public AlertDialog alerta;
+
+    private ListView listView;
+    private List<String> listViewMessages;
+    private ListViewAdapter listViewAdapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -53,7 +83,18 @@ public class PubSubActivity extends AppCompatActivity {
         configCDDL();
         configPublisher();
         configSubscriber();
+        configListView();
+    }
 
+    private void configArquivo() {
+        try {
+            is = new FileInputStream(caminho);
+            reader = new BufferedReader(new InputStreamReader(is, StandardCharsets.UTF_8));
+        }
+        catch (FileNotFoundException e1) {
+            // TODO Auto-generated catch block
+            e1.printStackTrace();
+        }
     }
 
     private void configPublisher() {
@@ -67,17 +108,36 @@ public class PubSubActivity extends AppCompatActivity {
 
         sub.subscribeServiceByName(MY_SERVICE);
         sub.setSubscriberListener(this::onMessage);
+    }
 
+    public void configMonitor(Message msn){
+        monit.metodo(sub, pub, this, msn);
     }
 
     private void onMessage(Message message) {
-        eb.post(new MessageEvent(message));
+        //eb.post(new MessageEvent(message));
+
+        //Tentando mandar a mensagem
+        //Object[] valor = message.getServiceValue();
+        //listViewMessages.add(0, StringUtils.join(valor, ", "));
+        //listViewAdapter.notifyDataSetChanged();
+
+        handler.post(() -> {
+            Object[] valor = message.getServiceValue();
+            listViewMessages.add(StringUtils.join(valor, ", "));
+            listViewAdapter.notifyDataSetChanged();
+
+            String str = (String) valor[0];
+            Log.d("JEANNNNNN2222",String.valueOf(message.getServiceValue()));
+        });
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void on(MessageEvent event) {
         Object[] valor = event.getMessage().getServiceValue();
         mensagensTextView.setText((String) valor[0]);
+        Log.d("JEANNNNNN3333", (String)String.valueOf(valor));
+        listViewMessages.add(StringUtils.join((String)valor[0], ", "));
     }
 
 
@@ -107,10 +167,163 @@ public class PubSubActivity extends AppCompatActivity {
     }
 
     private void onClick(View view) {
-        Message msg = new Message();
-        msg.setServiceName(MY_SERVICE);
-        msg.setServiceValue(mensagemEditText.getText().toString());
-        pub.publish(msg);
+        //Message msg = new Message();
+        //msg.setServiceName(MY_SERVICE);
+        //msg.setServiceValue(mensagemEditText.getText().toString());
+        //pub.publish(msg);
+
+        //msgem.setServiceName(MY_SERVICE);
+        //readData(caminho);
+
+        //try{
+            //InputStream is = new FileInputStream(caminho);
+            //BufferedReader reader = new BufferedReader(new InputStreamReader(is, StandardCharsets.UTF_8));
+            limpaListView();
+            configArquivo();
+            String line = "";
+            try {
+                reader.readLine();
+                while ((line = reader.readLine()) != null) {
+                    //Log.d("SinaisVitais", line);
+
+                    // envia os dados para tela celular
+                    ms = "";
+                    ms = line;
+                    Message msn = new Message();
+                    msn.setServiceName(MY_SERVICE);
+                    msn.setServiceValue(ms);
+                    pub.publish(msn);
+
+                    sub.subscribeServiceByName(MY_SERVICE);
+                    sub.setSubscriberListener(this::onMessage);
+
+                    configMonitor(msn);
+                    //onMessage(msn);
+                    //Log.d("PABLOOOOOO1111",ms);
+                    //Log.d("PABLOOOOOO4444", String.valueOf(msn.getServiceValue()));
+                }
+                is.close();
+            } catch (IOException e) {
+                Log.wtf("Sinais_vitais", "Erro ao ler arquivo" + line, e);
+                e.printStackTrace();
+            }
+        //}
+        //catch (FileNotFoundException e1) {
+            // TODO Auto-generated catch block
+            //e1.printStackTrace();
+        //}
     }
 
+    // Método ler o arquivo coluna por coluna
+    public void readDataByColumn(String caminho) {
+        try{
+            InputStream is = new BufferedInputStream(new FileInputStream(caminho));
+            BufferedReader br = new BufferedReader(new InputStreamReader(is, StandardCharsets.UTF_8));
+            String line = "";
+            try {
+                br.readLine();
+                while ((line = br.readLine()) != null) {
+                    String[] cols = line.split(",");
+                    System.out.println("Sinais vitais: " + cols[0] );
+
+                    // Passa a leitura do sensor para
+                    //subscriber.setSubscriberListener(this::onMessage);
+                    //Object obj = cols[0];
+                    ms = "";
+                    ms = cols[0];
+                    //onMessageTopic(ms);
+                }
+                is.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+        catch (FileNotFoundException e1) {
+            // TODO Auto-generated catch block
+            e1.printStackTrace();
+        }
+    }
+
+    // Método ler arquivo linha por linha
+    public void readData( String caminho) {
+        try{
+            InputStream is = new FileInputStream(caminho);
+            BufferedReader reader = new BufferedReader(
+                    new InputStreamReader(is, StandardCharsets.UTF_8)
+            );
+            String line = "";
+            try {
+                reader.readLine();
+                while ((line = reader.readLine()) != null) {
+                    //Log.d("SinaisVitais", line);
+
+                    // envia os dados para tela celular
+                    ms = "";
+                    ms = line;
+
+                    Log.d("PABLOOOOOO1111",ms);
+                    Log.d("PABLOOOOOO2222", (String)String.valueOf(msgem.getServiceValue()));
+                    Log.d("PABLOOOOOO3333", String.valueOf(msgem.getServiceValue()));
+                    msgem.setServiceValue(ms);
+                    pub.publish(msgem);
+                }
+                is.close();
+            } catch (IOException e) {
+                Log.wtf("Sinais_vitais", "Erro ao ler arquivo" + line, e);
+                e.printStackTrace();
+            }
+        }
+        catch (FileNotFoundException e1) {
+            // TODO Auto-generated catch block
+            e1.printStackTrace();
+        }
+    }
+
+    private void configListView() {
+        listView = findViewById(R.id.listview);
+        listViewMessages = new ArrayList<>();
+        listViewAdapter = new ListViewAdapter(this, listViewMessages);
+        listView.setAdapter(listViewAdapter);
+    }
+
+    public void limpaListView(){
+        listViewMessages.clear();
+        listViewAdapter.notifyDataSetChanged();
+    }
+
+    // Cria uma janela com alerta, informando o nível de degradação do paciente
+    public void geraAlerta(int nivelAlerta) {
+        if ( nivelAlerta != 0 ) {
+            //LayoutInflater é utilizado para inflar nosso layout em uma view.
+            //-pegamos nossa instancia da classe
+            LayoutInflater li = getLayoutInflater();
+
+            //inflamos o layout alerta.xml na view
+            //View view = li.inflate(R.layout.alerta, null);
+            View view = li.inflate(R.layout.alerta1, null);
+            if (nivelAlerta == 1) {
+                view = li.inflate(R.layout.alerta1, null);
+            } else if (nivelAlerta == 2) {
+                view = li.inflate(R.layout.alerta2, null);
+            } else if (nivelAlerta == 3) {
+                view = li.inflate(R.layout.alerta3, null);
+            }
+
+            //definimos para o botão do layout um clickListener
+            view.findViewById(R.id.bt).setOnClickListener(new View.OnClickListener() {
+                public void onClick(View arg0) {
+                    //exibe um Toast informativo.
+                    Toast.makeText(PubSubActivity.this, "alerta.dismiss()", Toast.LENGTH_SHORT).show();
+                    //desfaz o alerta.
+                    alerta.dismiss();
+                }
+            });
+
+            AlertDialog.Builder builder = new AlertDialog.Builder(this);
+            builder.setTitle("Alerta de paciente");
+            builder.setView(view);
+            alerta = builder.create();
+            alerta.show();
+        } //android:src="@drawable/alerta2"/>
+    }
 }

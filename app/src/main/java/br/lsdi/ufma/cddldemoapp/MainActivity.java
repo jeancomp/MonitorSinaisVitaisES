@@ -61,6 +61,8 @@ public class MainActivity extends AppCompatActivity {
     public Handler handler = new Handler();
 
     private String caminho = "/storage/emulated/0/Download/pacientes/055/05500001.csv";
+    InputStream is;
+    BufferedReader reader;
     Button startButton;
     Button stopButton;
     Message msg = new Message();
@@ -85,6 +87,17 @@ public class MainActivity extends AppCompatActivity {
         configFilterButton();
     }
 
+    private void configArquivo() {
+        try {
+            is = new FileInputStream(caminho);
+            reader = new BufferedReader(new InputStreamReader(is, StandardCharsets.UTF_8));
+        }
+        catch (FileNotFoundException e1) {
+            // TODO Auto-generated catch block
+            e1.printStackTrace();
+        }
+    }
+
     private void configCDDL() {
         //Host leva o nome do microBroker
         String host = CDDL.startMicroBroker();
@@ -104,15 +117,18 @@ public class MainActivity extends AppCompatActivity {
 
         subscriber = SubscriberFactory.createSubscriber();
         subscriber.addConnection(cddl.getConnection());
-        //subscriber.setSubscriberListener(this::onMessage);
-        subscriber.setSubscriberListener(this::onMessageTopic);
+        //subscriber.subscribeServiceByPublisherId("jean.marques@lsdi.ufma.br");
+        subscriber.setSubscriberListener(this::onMessage);
+
+        //subscriber.setSubscriberListener(this::onMessageTopic);
     }
 
     private void onMessage(Message message) {
 
         handler.post(() -> {
             Object[] valor = message.getServiceValue();
-            listViewMessages.add(0, StringUtils.join(valor, ", "));
+            //listViewMessages.add(0, StringUtils.join(valor, ", "));
+            listViewMessages.add(StringUtils.join(valor, ", "));
             listViewAdapter.notifyDataSetChanged();
         });
     }
@@ -121,13 +137,34 @@ public class MainActivity extends AppCompatActivity {
 
         handler.post(() -> {
             Object valor = ms;
-            listViewMessages.add(0, StringUtils.join(valor, ", "));
+            Log.d("TESTANDOSinaisVitais", ms);
+            //Object valor = message.getTopic();
+            listViewMessages.add(StringUtils.join(valor, ", "));
             listViewAdapter.notifyDataSetChanged();
+            //subscriber.setSubscriberListener(this::onMessageTopic);
         });
     }
 
+    public void mensagemTela(String mm){
+        handler.post(() -> {
+            Object valor = mm;
+            //Log.d("TESTANDOSinaisVitais", ms);
+            //Object valor = message.getTopic();
+            listViewMessages.add(StringUtils.join(valor, ", "));
+            listViewAdapter.notifyDataSetChanged();
+            //subscriber.setSubscriberListener(this::onMessageTopic);
+        });
+    }
+
+    //@Subscribe(threadMode = ThreadMode.MAIN)
+    //public void on(MessageEvent event) {
+    //}
+
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void on(MessageEvent event) {
+        Object[] valor = event.getMessage().getServiceValue();
+        Log.d("JEANNNNNN3333", (String)String.valueOf(valor));
+        listViewMessages.add(StringUtils.join((String)valor[0], ", "));
     }
 
     @Override
@@ -174,6 +211,11 @@ public class MainActivity extends AppCompatActivity {
         listView.setAdapter(listViewAdapter);
     }
 
+    public void limpaListView(){
+        listViewMessages.clear();
+        listViewAdapter.notifyDataSetChanged();
+    }
+
     private void configStartButton() {
         startButton = findViewById(R.id.start_button);
         startButton.setOnClickListener(e -> {
@@ -194,7 +236,13 @@ public class MainActivity extends AppCompatActivity {
         //subscriber.subscribeServiceByName(selectedSensor);
         //currentSensor = selectedSensor;
         //cddl.startLocationSensor();
-        readDataByColumn(caminho);
+        //readDataByColumn(caminho);
+
+        //subscriber.subscribeServiceByName("my-service");
+        //subscriber.setSubscriberListener(this::onMessage);
+        limpaListView();
+        configArquivo();
+        readData(caminho);
     }
 
     private void stopCurrentSensor() {
@@ -238,6 +286,14 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
+    public void subscribeServiceByName(String m){
+        subscriber.subscribeServiceByName(m);
+    }
+
+    public void setListener(ISubscriberListener listener){
+        subscriber.setSubscriberListener(listener);
+    }
+
     // Método ler o arquivo coluna por coluna
     public void readDataByColumn(String caminho) {
         try{
@@ -270,26 +326,37 @@ public class MainActivity extends AppCompatActivity {
 
     // Método ler arquivo linha por linha
     public void readData( String caminho) {
-        try{
-            InputStream is = new FileInputStream(caminho);
-            BufferedReader reader = new BufferedReader(
-                    new InputStreamReader(is, StandardCharsets.UTF_8)
-            );
+        //try{
+            //InputStream is = new FileInputStream(caminho);
+            //BufferedReader reader = new BufferedReader(new InputStreamReader(is, StandardCharsets.UTF_8));
             String line = "";
             try {
                 reader.readLine();
                 while ((line = reader.readLine()) != null) {
-                    Log.d("SinaisVitais", line);
+                    //Log.d("SinaisVitais", line);
+
+                    // envia os dados para tela celular
+                    ms = "";
+                    ms = line;
+
+                    //mensagemTela(ms);
+
+                    Message msn = new Message();
+                    //msn.setServiceName("my-service");
+                    msn.setServiceValue(ms);
+                    subscriber.subscribeServiceByName("my-service");
+                    subscriber.setSubscriberListener(this::onMessage);
+                    onMessage(msn);
                 }
                 is.close();
             } catch (IOException e) {
                 Log.wtf("Sinais_vitais", "Erro ao ler arquivo" + line, e);
                 e.printStackTrace();
             }
-        }
-        catch (FileNotFoundException e1) {
+        //}
+        //catch (FileNotFoundException e1) {
             // TODO Auto-generated catch block
-            e1.printStackTrace();
-        }
+            //e1.printStackTrace();
+        //}
     }
 }
