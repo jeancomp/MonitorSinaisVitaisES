@@ -64,6 +64,7 @@ public class MonitorPrincipal {
         subscriber = sub;
         pubActivity = p;
 
+        // a regra esta muito simples, nao verifico o valor string=RESP, PULSO,... e nem o valor numerico=100, 34, 56......
         String monitorCode = publisher.getMonitor().addRule("select * from Message", monitorListener);
         //monitorCode = sub.getMonitor().addRule("select * from SensorDataMessage where seviceValue='RESP'", monitorListener);
     }
