@@ -59,6 +59,7 @@ public class PubSubActivity extends AppCompatActivity {
     String ms;
     public Handler handler = new Handler();
     public AlertDialog alerta;
+    String monitorCode;
 
     private ListView listView;
     private List<String> listViewMessages;
@@ -108,6 +109,213 @@ public class PubSubActivity extends AppCompatActivity {
 
         sub.subscribeServiceByName(MY_SERVICE);
         sub.setSubscriberListener(this::onMessage);
+
+        // EWS  Frequência  respiratória
+        // Sinal:RESP Valor: <=9
+        monitorCode = pub.getMonitor().addRule("select * from Message where cast(serviceValue[0], string)='RESP' and cast(serviceValue[1], double)<=9", message -> {
+            new Thread() {
+                public void run() {
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            geraAlerta(2, msgAlerta(message));
+                        }
+                    });
+                }
+            }.start();});
+
+        // EWS  Frequência  respiratória
+        // Sinal:RESP Valor: 15 >= x <= 20
+        monitorCode = pub.getMonitor().addRule("select * from Message where cast(serviceValue[0], string)='RESP' and cast(serviceValue[1], double)>=15 and cast(serviceValue[1], double)<=20", message -> {
+            new Thread() {
+                public void run() {
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            geraAlerta(1, msgAlerta(message));
+                        }
+                    });
+                }
+            }.start();});
+
+        // EWS  Frequência  respiratória
+        // Sinal:RESP Valor: 21 >= x <= 29
+        monitorCode = pub.getMonitor().addRule("select * from Message where cast(serviceValue[0], string)='RESP' and cast(serviceValue[1], double)>=21 and cast(serviceValue[1], double)<=29", message -> {
+            new Thread() {
+                public void run() {
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            geraAlerta(2, msgAlerta(message));
+                        }
+                    });
+                }
+            }.start();});
+
+        // EWS  Frequência  respiratória
+        // Sinal:RESP Valor: >=30
+        monitorCode = pub.getMonitor().addRule("select * from Message where cast(serviceValue[0], string)='RESP' and cast(serviceValue[1], double)>=30", message -> {
+            new Thread() {
+                public void run() {
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            geraAlerta(3, msgAlerta(message));
+                        }
+                    });
+                }
+            }.start();});
+
+        // EWS Saturação O2
+        // Sinal:SPO2 Valor: <85
+        monitorCode = pub.getMonitor().addRule("select * from Message where cast(serviceValue[0], string)='SPO2' and cast(serviceValue[1], double)<85", message -> {
+            new Thread() {
+                public void run() {
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            geraAlerta(3, msgAlerta(message));
+                        }
+                    });
+                }
+            }.start();});
+
+        // EWS Saturação O2
+        // Sinal:SPO2 Valor: 85 >= x <= 89
+        monitorCode = pub.getMonitor().addRule("select * from Message where cast(serviceValue[0], string)='SPO2' and cast(serviceValue[1], double)>=85 and cast(serviceValue[1], double)<=89", message -> {
+            new Thread() {
+                public void run() {
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            geraAlerta(2, msgAlerta(message));
+                        }
+                    });
+                }
+            }.start();});
+
+        // EWS Saturação O2
+        // Sinal:SPO2 Valor: 90 >= x <= 92
+        monitorCode = pub.getMonitor().addRule("select * from Message where cast(serviceValue[0], string)='SPO2' and cast(serviceValue[1], double)>=90 and cast(serviceValue[1], double)<=92", message -> {
+            new Thread() {
+                public void run() {
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            geraAlerta(1, msgAlerta(message));
+                        }
+                    });
+                }
+            }.start();});
+
+        // EWS Frequência cardíaca
+        // Sinal:HR Valor: <= 40
+        monitorCode = pub.getMonitor().addRule("select * from Message where cast(serviceValue[0], string)='HR' and cast(serviceValue[1], double)<=40", message -> {
+            System.out.println("8 - ####################################################################");
+            new Thread() {
+                public void run() {
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            geraAlerta(2, msgAlerta(message));
+                        }
+                    });
+                }
+            }.start();});
+
+        // EWS Frequência cardíaca
+        // Sinal:HR Valor: 41>= x <= 50
+        monitorCode = pub.getMonitor().addRule("select * from Message where cast(serviceValue[0], string)='HR' and cast(serviceValue[1], double)>=41 and cast(serviceValue[1], double)<=50", message -> {
+            new Thread() {
+                public void run() {
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            geraAlerta(1, msgAlerta(message));
+                        }
+                    });
+                }
+            }.start();});
+
+        // EWS Frequência cardíaca
+        // Sinal:HR Valor: 101>= x <= 110
+        monitorCode = pub.getMonitor().addRule("select * from Message where cast(serviceValue[0], string)='HR' and cast(serviceValue[1], double)>=101 and cast(serviceValue[1], double)<=110", message -> {
+            new Thread() {
+                public void run() {
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            geraAlerta(1, msgAlerta(message));
+                        }
+                    });
+                }
+            }.start();});
+
+        // EWS Frequência cardíaca
+        // Sinal:HR Valor: 111>= x <= 129
+        monitorCode = pub.getMonitor().addRule("select * from Message where cast(serviceValue[0], string)='HR' and cast(serviceValue[1], double)>=111 and cast(serviceValue[1], double)<=129", message -> {
+            new Thread() {
+                public void run() {
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            geraAlerta(2, msgAlerta(message));
+                        }
+                    });
+                }
+            }.start();});
+
+        // EWS Frequência cardíaca
+        // Sinal:HR Valor: >=130
+        monitorCode = pub.getMonitor().addRule("select * from Message where cast(serviceValue[0], string)='HR' and cast(serviceValue[1], double)>=130", message -> {
+            new Thread() {
+                public void run() {
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            geraAlerta(3, msgAlerta(message));
+                        }
+                    });
+                }
+            }.start();});
+
+        // EWS Pulso
+        // Sinal:PULSE Valor: <=40>
+        monitorCode = pub.getMonitor().addRule("select * from Message where cast(serviceValue[0], string)='PULSE' and cast(serviceValue[1], double)<=40", message -> {
+            new Thread() {
+                public void run() {
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            geraAlerta(1, msgAlerta(message));
+                        }
+                    });
+                }
+            }.start();});
+
+        // EWS Pulso
+        // Sinal:PULSE Valor: >=101
+        monitorCode = pub.getMonitor().addRule("select * from Message where cast(serviceValue[0], string)='PULSE' and cast(serviceValue[1], double)>=101", message -> {
+            new Thread() {
+                public void run() {
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            geraAlerta(1, msgAlerta(message));
+                        }
+                    });
+                }
+            }.start();});
+    }
+    public String msgAlerta(Message msg){
+        Object[] valor = msg.getServiceValue();
+        String mensagemRecebida = StringUtils.join(valor, ", ");
+        String ms = "";
+        ms = mensagemRecebida;
+        String[] sin = ms.split(";|;\\s");
+        //String ss = sin[0];
+        //double vv = Double.parseDouble(sin[1]);
+        return sin[0];
     }
 
     public void configMonitor(Message msn){
@@ -128,7 +336,6 @@ public class PubSubActivity extends AppCompatActivity {
             listViewAdapter.notifyDataSetChanged();
 
             String str = (String) valor[0];
-            Log.d("JEANNNNNN2222",String.valueOf(message.getServiceValue()));
         });
     }
 
@@ -136,7 +343,6 @@ public class PubSubActivity extends AppCompatActivity {
     public void on(MessageEvent event) {
         Object[] valor = event.getMessage().getServiceValue();
         mensagensTextView.setText((String) valor[0]);
-        Log.d("JEANNNNNN3333", (String)String.valueOf(valor));
         listViewMessages.add(StringUtils.join((String)valor[0], ", "));
     }
 
@@ -191,16 +397,22 @@ public class PubSubActivity extends AppCompatActivity {
                     ms = line;
                     Message msn = new Message();
                     msn.setServiceName(MY_SERVICE);
-                    msn.setServiceValue(ms);
+
+                    String[] sinal = line.split(";|;\\s");
+                    //String[] sinal = line.split(",");
+                    String s = sinal[0];
+                    double d = Double.parseDouble(sinal[1]);
+
+                    Object[] o = {s,d};
+                    msn.setServiceValue(o);
+
                     pub.publish(msn);
 
-                    sub.subscribeServiceByName(MY_SERVICE);
-                    sub.setSubscriberListener(this::onMessage);
+                    //sub.subscribeServiceByName(MY_SERVICE);
+                    //sub.setSubscriberListener(this::onMessage);
 
-                    configMonitor(msn);
-                    //onMessage(msn);
-                    //Log.d("PABLOOOOOO1111",ms);
-                    //Log.d("PABLOOOOOO4444", String.valueOf(msn.getServiceValue()));
+                    // chama o monitor para criar as regras que irão monitorar os sinais vitais
+                    //configMonitor(msn);
                 }
                 is.close();
             } catch (IOException e) {
@@ -261,9 +473,6 @@ public class PubSubActivity extends AppCompatActivity {
                     ms = "";
                     ms = line;
 
-                    Log.d("PABLOOOOOO1111",ms);
-                    Log.d("PABLOOOOOO2222", (String)String.valueOf(msgem.getServiceValue()));
-                    Log.d("PABLOOOOOO3333", String.valueOf(msgem.getServiceValue()));
                     msgem.setServiceValue(ms);
                     pub.publish(msgem);
                 }
@@ -292,7 +501,7 @@ public class PubSubActivity extends AppCompatActivity {
     }
 
     // Cria uma janela com alerta, informando o nível de degradação do paciente
-    public void geraAlerta(int nivelAlerta) {
+    public void geraAlerta(int nivelAlerta, String str) {
         if ( nivelAlerta != 0 ) {
             //LayoutInflater é utilizado para inflar nosso layout em uma view.
             //-pegamos nossa instancia da classe
@@ -313,17 +522,21 @@ public class PubSubActivity extends AppCompatActivity {
             view.findViewById(R.id.bt).setOnClickListener(new View.OnClickListener() {
                 public void onClick(View arg0) {
                     //exibe um Toast informativo.
-                    Toast.makeText(PubSubActivity.this, "alerta.dismiss()", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(PubSubActivity.this, "alerta", Toast.LENGTH_SHORT).show();
                     //desfaz o alerta.
-                    alerta.dismiss();
+                    //alerta.dismiss();
+                    alerta.cancel();
                 }
             });
 
             AlertDialog.Builder builder = new AlertDialog.Builder(this);
-            builder.setTitle("Alerta de paciente");
+            //builder.setTitle("Alerta de paciente");
+            View viewText = view;
+            TextView textView = viewText.findViewById(R.id.sinal);
+            textView.setText(str);
             builder.setView(view);
             alerta = builder.create();
             alerta.show();
-        } //android:src="@drawable/alerta2"/>
+        }
     }
 }

@@ -10,13 +10,15 @@
         android:layout_height="160dp"
         android:layout_gravity="center"
         android:src="@drawable/alerta1" />
+
     <TextView
         android:id="@+id/sinal"
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
-        android:textSize="20sp"
+        android:padding="10sp"
+        android:textAlignment="center"
         android:textColor="#FF000000"
-        android:padding="10sp"/>
+        android:textSize="10sp" />
     <Button
         android:id="@+id/bt"
         android:layout_width="fill_parent"
