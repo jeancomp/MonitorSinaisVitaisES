@@ -6,7 +6,10 @@ frequência respiratória), sendo capaz de transmiti-los ao sistema móvel, os d
 análise. Primeiramente, os dados são lidos do Dataset, interpretados e selecionados os sensores de
 maior interesse dentre os diversos sensores que apresentam no Dataset, sendo depois transmitidos às
 telas dos dispositivos. Depois que os dados são lidos e interpretados, dispara-se algum alerta se atender
-a uma certa regra previamente definida, conforme mostrado na figura 1, essa regra é definida pelo
+a uma certa regra previamente definida, essa regra é definida pelo
 monitor da aplicação. Para montar a regra que dispara os alertas mostrando que o paciente esta
 entrando em um quadro de deterioração, nele mostra o padrão EWS(Escore de
 Alerta Precoce), e para montar a comunicação e troca de mensagens nos dispositivos, nele mostra a arquitetura CDDL.
+
+Email:
+jeancomp@gmail.com
