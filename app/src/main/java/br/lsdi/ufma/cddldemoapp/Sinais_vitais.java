@@ -193,12 +193,6 @@ public class Sinais_vitais extends AppCompatActivity {
     }
 
     private void configSpinner() {
-        //List<Sensor> sensors = cddl.getInternalSensorList();
-        //sensorNames = sensors.stream().map(Sensor::getName).collect(Collectors.toList());
-
-        //ArrayAdapter<String> adapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, sensorNames);
-        //spinner = findViewById(R.id.spinner);
-        //spinner.setAdapter(adapter);
         List<String> listaPacientes = new ArrayList<>();
         listaPacientes.add("Paciente 055");
         listaPacientes.add("Paciente 201");
