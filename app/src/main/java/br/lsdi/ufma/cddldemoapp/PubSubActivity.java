@@ -51,6 +51,8 @@ public class PubSubActivity extends AppCompatActivity {
     private Subscriber sub;
     private EventBus eb;
     MonitorPrincipal monit = new MonitorPrincipal();
+    Controle_Alerta controle_alerta = new Controle_Alerta(this);
+    TextView t1, t2, t3;
 
     private String caminho = "/storage/emulated/0/Download/pacientes/055/05500001.csv";
     InputStream is;
@@ -71,6 +73,11 @@ public class PubSubActivity extends AppCompatActivity {
         setContentView(R.layout.activity_pub_sub);
 
         mensagemEditText = findViewById(R.id.mensagemEditText);
+
+        // Mostra total de alertas gerados por nível
+        t1= findViewById(R.id.idA1);
+        t2 = findViewById(R.id.idA2);
+        t3 = findViewById(R.id.idA3);
 
         mensagensTextView = findViewById(R.id.mensagensTextView);
 
@@ -98,6 +105,30 @@ public class PubSubActivity extends AppCompatActivity {
         }
     }
 
+    public void atualizaTotalAlerta(TextView tex, int i){
+        if( i == 1 ){
+            int[] total = controle_alerta.getTotalAlertaNivel();
+            int t = total[0] + 1;
+            total[0] = t;
+            t1.setText(Integer.toString(t));
+            controle_alerta.setTotalAlertaNivel(total);
+        }
+        else if( i== 2 ){
+            int[] total = controle_alerta.getTotalAlertaNivel();
+            int t = total[1] + 1;
+            total[1] = t;
+            t2.setText(Integer.toString(t));
+            controle_alerta.setTotalAlertaNivel(total);
+        }
+        else{
+            int[] total = controle_alerta.getTotalAlertaNivel();
+            int t = total[2] + 1;
+            total[2] = t;
+            t3.setText(Integer.toString(t));
+            controle_alerta.setTotalAlertaNivel(total);
+        }
+    }
+
     private void configPublisher() {
         pub = PublisherFactory.createPublisher();
         pub.addConnection(cddl.getConnection());
@@ -112,12 +143,14 @@ public class PubSubActivity extends AppCompatActivity {
 
         // EWS  Frequência  respiratória
         // Sinal:RESP Valor: <=9
-        monitorCode = pub.getMonitor().addRule("select * from Message where cast(serviceValue[0], string)='RESP' and cast(serviceValue[1], double)<=9", message -> {
+        monitorCode = pub.getMonitor().addRule("select * from Message " +
+                "where cast(serviceValue[0], string)='RESP' and cast(serviceValue[1], double)<=9", message -> {
             new Thread() {
                 public void run() {
                     runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
+                            atualizaTotalAlerta(t2,2);
                             geraAlerta(2, msgAlerta(message));
                         }
                     });
@@ -126,13 +159,16 @@ public class PubSubActivity extends AppCompatActivity {
 
         // EWS  Frequência  respiratória
         // Sinal:RESP Valor: 15 >= x <= 20
-        monitorCode = pub.getMonitor().addRule("select * from Message where cast(serviceValue[0], string)='RESP' and cast(serviceValue[1], double)>=15 and cast(serviceValue[1], double)<=20", message -> {
+        monitorCode = pub.getMonitor().addRule("select * from Message where cast(serviceValue[0], string)='RESP' and cast(serviceValue[1], double)>=16 and cast(serviceValue[1], double)<=20", message -> {
             new Thread() {
                 public void run() {
                     runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
-                            geraAlerta(1, msgAlerta(message));
+                            atualizaTotalAlerta(t1,1);
+                            if(true) {
+                                geraAlerta(1, msgAlerta(message));
+                            }
                         }
                     });
                 }
@@ -146,6 +182,7 @@ public class PubSubActivity extends AppCompatActivity {
                     runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
+                            atualizaTotalAlerta(t2,2);
                             geraAlerta(2, msgAlerta(message));
                         }
                     });
@@ -160,6 +197,7 @@ public class PubSubActivity extends AppCompatActivity {
                     runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
+                            atualizaTotalAlerta(t3,3);
                             geraAlerta(3, msgAlerta(message));
                         }
                     });
@@ -174,6 +212,7 @@ public class PubSubActivity extends AppCompatActivity {
                     runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
+                            atualizaTotalAlerta(t3,3);
                             geraAlerta(3, msgAlerta(message));
                         }
                     });
@@ -188,6 +227,7 @@ public class PubSubActivity extends AppCompatActivity {
                     runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
+                            atualizaTotalAlerta(t2,2);
                             geraAlerta(2, msgAlerta(message));
                         }
                     });
@@ -202,6 +242,7 @@ public class PubSubActivity extends AppCompatActivity {
                     runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
+                            atualizaTotalAlerta(t1,1);
                             geraAlerta(1, msgAlerta(message));
                         }
                     });
@@ -211,12 +252,12 @@ public class PubSubActivity extends AppCompatActivity {
         // EWS Frequência cardíaca
         // Sinal:HR Valor: <= 40
         monitorCode = pub.getMonitor().addRule("select * from Message where cast(serviceValue[0], string)='HR' and cast(serviceValue[1], double)<=40", message -> {
-            System.out.println("8 - ####################################################################");
             new Thread() {
                 public void run() {
                     runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
+                            atualizaTotalAlerta(t2,2);
                             geraAlerta(2, msgAlerta(message));
                         }
                     });
@@ -231,6 +272,7 @@ public class PubSubActivity extends AppCompatActivity {
                     runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
+                            atualizaTotalAlerta(t1,1);
                             geraAlerta(1, msgAlerta(message));
                         }
                     });
@@ -239,12 +281,13 @@ public class PubSubActivity extends AppCompatActivity {
 
         // EWS Frequência cardíaca
         // Sinal:HR Valor: 101>= x <= 110
-        monitorCode = pub.getMonitor().addRule("select * from Message where cast(serviceValue[0], string)='HR' and cast(serviceValue[1], double)>=101 and cast(serviceValue[1], double)<=110", message -> {
+        monitorCode = pub.getMonitor().addRule("select * from Message where cast(serviceValue[0], string)='HR' and cast(serviceValue[1], double)>=102 and cast(serviceValue[1], double)<=110", message -> {
             new Thread() {
                 public void run() {
                     runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
+                            atualizaTotalAlerta(t1,1);
                             geraAlerta(1, msgAlerta(message));
                         }
                     });
@@ -259,6 +302,7 @@ public class PubSubActivity extends AppCompatActivity {
                     runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
+                            atualizaTotalAlerta(t2,2);
                             geraAlerta(2, msgAlerta(message));
                         }
                     });
@@ -273,6 +317,7 @@ public class PubSubActivity extends AppCompatActivity {
                     runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
+                            atualizaTotalAlerta(t3,3);
                             geraAlerta(3, msgAlerta(message));
                         }
                     });
@@ -287,6 +332,7 @@ public class PubSubActivity extends AppCompatActivity {
                     runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
+                            atualizaTotalAlerta(t1,1);
                             geraAlerta(1, msgAlerta(message));
                         }
                     });
@@ -295,12 +341,13 @@ public class PubSubActivity extends AppCompatActivity {
 
         // EWS Pulso
         // Sinal:PULSE Valor: >=101
-        monitorCode = pub.getMonitor().addRule("select * from Message where cast(serviceValue[0], string)='PULSE' and cast(serviceValue[1], double)>=101", message -> {
+        monitorCode = pub.getMonitor().addRule("select * from Message where cast(serviceValue[0], string)='PULSE' and cast(serviceValue[1], double)>=102", message -> {
             new Thread() {
                 public void run() {
                     runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
+                            atualizaTotalAlerta(t1,1);
                             geraAlerta(1, msgAlerta(message));
                         }
                     });
@@ -330,12 +377,28 @@ public class PubSubActivity extends AppCompatActivity {
         //listViewMessages.add(0, StringUtils.join(valor, ", "));
         //listViewAdapter.notifyDataSetChanged();
 
+        //new Thread() {
+            //public void run() {
+               // runOnUiThread(new Runnable() {
+                    //@Override
+                    //public void run() {
+                        //try {
+                       //     Thread.sleep(600);
+                        //} catch (InterruptedException e) {
+                         //   // TODO Auto-generated catch block
+                          //  e.printStackTrace();
+                        //}
+                    //}
+                //});
+            //}
+        //}.start();
+
         handler.post(() -> {
             Object[] valor = message.getServiceValue();
             listViewMessages.add(StringUtils.join(valor, ", "));
             listViewAdapter.notifyDataSetChanged();
 
-            String str = (String) valor[0];
+            //String str = (String) valor[0];
         });
     }
 
@@ -390,9 +453,6 @@ public class PubSubActivity extends AppCompatActivity {
             try {
                 reader.readLine();
                 while ((line = reader.readLine()) != null) {
-                    //Log.d("SinaisVitais", line);
-
-                    // envia os dados para tela celular
                     ms = "";
                     ms = line;
                     Message msn = new Message();
@@ -407,14 +467,12 @@ public class PubSubActivity extends AppCompatActivity {
                     msn.setServiceValue(o);
 
                     pub.publish(msn);
-
+                    onMessage(msn);
                     //sub.subscribeServiceByName(MY_SERVICE);
                     //sub.setSubscriberListener(this::onMessage);
-
-                    // chama o monitor para criar as regras que irão monitorar os sinais vitais
-                    //configMonitor(msn);
                 }
                 is.close();
+                reader.close();
             } catch (IOException e) {
                 Log.wtf("Sinais_vitais", "Erro ao ler arquivo" + line, e);
                 e.printStackTrace();
@@ -477,6 +535,7 @@ public class PubSubActivity extends AppCompatActivity {
                     pub.publish(msgem);
                 }
                 is.close();
+                reader.close();
             } catch (IOException e) {
                 Log.wtf("Sinais_vitais", "Erro ao ler arquivo" + line, e);
                 e.printStackTrace();

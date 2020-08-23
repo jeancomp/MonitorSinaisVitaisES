@@ -5,10 +5,10 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    tools:context=".MainActivity">
+    tools:context=".Login">
 
     <TextView
-        android:text="@string/subscrever_sensores"
+        android:text="TELA LOGIN"
         android:background="@color/colorTitle"
         android:paddingBottom="10dp"
         android:padding="15dp"
@@ -18,119 +18,85 @@
         android:layout_height="wrap_content" />
 
     <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="495dp"
         android:orientation="vertical"
-        android:padding="5dp"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent">
-
-    <TextView
-        android:textColor="@android:color/black"
-        android:text="@string/available_sensors"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content" />
-
-    <Spinner
-        android:id="@+id/spinner"
-        android:focusedByDefault="true"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content" />
+        android:padding="5dp">
 
         <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:labelFor="@id/filter_edittext"
-            android:text="@string/filter_label"
-            android:textColor="@android:color/black"
-            android:visibility="invisible" />
+            android:layout_width="78dp"
+            android:layout_height="34dp"
+            android:text="Login: " />
 
         <EditText
-            android:id="@+id/filter_edittext"
+            android:id="@+id/login"
+            android:layout_width="230dp"
+            android:layout_height="wrap_content"
+            android:inputType="text" />
+
+        <TextView
+            android:layout_width="78dp"
+            android:layout_height="34dp"
+            android:text="Senha: " />
+
+        <EditText
+            android:id="@+id/senha"
+            android:layout_width="230dp"
+            android:layout_height="wrap_content"
+            android:inputType="text|textPassword" />
+
+        <LinearLayout
+            style="?android:attr/buttonBarStyle"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:autofillHints="Filtro EPL"
-            android:inputType="text"
-            android:visibility="invisible"
-            tools:visibility="invisible" />
+            android:orientation="horizontal">
 
-    <LinearLayout
-        style="?android:attr/buttonBarStyle"
-        android:orientation="horizontal"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content">
+            <Button
+                android:id="@+id/entrar"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:onClick="proximaTela"
+                android:text="Entrar"
+                android:textColor="@android:color/black" />
 
-        <Button
-            style="?android:attr/buttonBarButtonStyle"
-            android:id="@+id/start_button"
-            android:text="@string/start"
-            android:drawableTop="@drawable/ic_start"
-            android:layout_weight="1"
-            android:textColor="@android:color/black"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content" />
+            <Button
+                android:id="@+id/sair"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Sair"
+                android:textColor="@android:color/black" />
 
-        <Button
-            style="?android:attr/buttonBarButtonStyle"
-            android:id="@+id/stop_button"
-            android:textColor="@android:color/black"
-            android:text="@string/stop"
-            android:drawableTop="@drawable/ic_stop"
-            android:layout_weight="1"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content" />
+        </LinearLayout>
 
-        <Button
-            style="?android:attr/buttonBarButtonStyle"
-            android:id="@+id/clear_button"
-            android:text="@string/clear"
-            android:textColor="@android:color/black"
-            android:drawableTop="@drawable/ic_clear"
-            android:layout_weight="1"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content" />
-
-        <Button
-            style="?android:attr/buttonBarButtonStyle"
-            android:id="@+id/filter_button"
-            android:text="@string/filter_button_label"
-            android:textColor="@android:color/black"
-            android:drawableTop="@drawable/ic_filter"
-            android:layout_weight="1"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content" />
-
-    </LinearLayout>
-
-    <TextView
-        android:paddingTop="10dp"
-        android:text="@string/messages_label"
-        android:textColor="@android:color/black"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content" />
-
-    <android.support.constraint.ConstraintLayout
-        android:layout_width="match_parent"
-        android:layout_height="match_parent">
-
-        <ImageView
-            android:contentDescription="@string/lsdi_logo"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="8dp"
-            android:layout_marginTop="8dp"
-            android:layout_marginEnd="8dp"
-            android:alpha="0.4"
-            android:background="@drawable/logo"
-            app:layout_constraintBottom_toBottomOf="@+id/listview"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="@+id/listview" />
-
-        <ListView
-            android:id="@+id/listview"
+        <android.support.constraint.ConstraintLayout
             android:layout_width="match_parent"
-            android:layout_height="match_parent" />
+            android:layout_height="match_parent">
 
-    </android.support.constraint.ConstraintLayout>
+            <ImageView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:layout_marginTop="8dp"
+                android:layout_marginEnd="8dp"
+                android:alpha="0.4"
+                android:background="@drawable/logo"
+                android:contentDescription="@string/lsdi_logo"
+                app:layout_constraintBottom_toBottomOf="@+id/listview"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintHorizontal_bias="0.38"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="@+id/listview" />
+
+            <TextView
+                android:layout_width="178dp"
+                android:layout_height="31dp"
+                android:text="Desenvolvido por: "
+                tools:ignore="MissingConstraints"
+                tools:layout_editor_absoluteX="1dp"
+                tools:layout_editor_absoluteY="0dp" />
+        </android.support.constraint.ConstraintLayout>
 
     </LinearLayout>
 

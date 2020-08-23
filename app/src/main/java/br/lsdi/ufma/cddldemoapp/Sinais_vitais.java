@@ -44,7 +44,6 @@ import br.ufma.lsdi.cddl.pubsub.Subscriber;
 import br.ufma.lsdi.cddl.pubsub.SubscriberFactory;
 
 public class Sinais_vitais extends AppCompatActivity {
-
     private Spinner spinner;
     private List<String> spinnerSensors;
     private ArrayAdapter<String> spinnerAdapter;
@@ -59,9 +58,10 @@ public class Sinais_vitais extends AppCompatActivity {
     private List<String> sensorNames;
     private String currentSensor;
     private Subscriber subscriber;
+
     private boolean filtering;
+
     public Handler handler = new Handler();
-    public AlertDialog alerta;
 
     private String caminho = "/storage/emulated/0/Download/pacientes/055/05500001.csv";
     InputStream is;
@@ -103,7 +103,8 @@ public class Sinais_vitais extends AppCompatActivity {
 
     private void configCDDL() {
         //Host leva o nome do microBroker
-        String host = CDDL.startMicroBroker();
+        //String host = CDDL.startMicroBroker();
+        String host = "broker.hivemq.com";
 
         //Abre conecção
         Connection connection = ConnectionFactory.createConnection();
@@ -120,6 +121,7 @@ public class Sinais_vitais extends AppCompatActivity {
 
         subscriber = SubscriberFactory.createSubscriber();
         subscriber.addConnection(cddl.getConnection());
+        //subscriber.subscribeServiceByPublisherId("jean.marques@lsdi.ufma.br");
         subscriber.setSubscriberListener(this::onMessage);
 
         //subscriber.setSubscriberListener(this::onMessageTopic);
@@ -342,14 +344,6 @@ public class Sinais_vitais extends AppCompatActivity {
                 ms = line;
 
                 //mensagemTela(ms);
-                String[] sinal = line.split(";|;\\s");
-                String s = sinal[0];
-                double v = Double.parseDouble(sinal[1]);
-                //if( s.equals("C.O.")) {
-                    //System.out.printf("Sinais vitais string: %s \n",s);
-                    //System.out.printf("Sinais vitais numero: %f \n",v);
-                //}
-                geraAlerta( pontuacao(s,v) );
 
                 Message msn = new Message();
                 //msn.setServiceName("my-service");
@@ -368,122 +362,5 @@ public class Sinais_vitais extends AppCompatActivity {
         // TODO Auto-generated catch block
         //e1.printStackTrace();
         //}
-    }
-
-    // Função  pontuacao(sinal,valor)
-    // Parâmetros:  sinal  -  sigla  do  sinal  fisiológico
-    //              valor  -  valor  medido
-    // Retorno:  valor  tipo  int  contendo  o  escore	de	alerta	precoce	calculado
-    public int pontuacao( String sinal, double valor ){
-        int ews = -1;
-
-        switch( sinal ) {
-            // EWS  Frequência  respiratória
-            case ( "RESP" ):
-                if( valor <= 9 ) {
-                    ews = 2;
-                }
-                else if( valor>=10 && valor<=14 ){
-                    ews = 0;
-                }
-                else if( valor>=15 && valor  <=20 ) {
-                    ews = 1;
-                }
-                 else if( valor>=21 && valor  <=29 ) {
-                    ews = 2;
-                }
-                 else if( valor>=30 ){
-                    ews = 3;
-                }
-             break;
-
-            // EWS Saturação O2
-            case ( "SPO2" ):
-                if( valor<85 ) {
-                    ews = 3;
-                }
-                else if( valor>=85 && valor<=89){
-                    ews = 2;
-                }
-                else if( valor>=90 && valor<=92 ) {
-                    ews = 1;
-                }
-                else if( valor>=93 ) {
-                    ews = 0;
-                }
-            break;
-
-            // EWS Frequência cardíaca
-            case ( "HR" ):
-                if( valor<=40 ) {
-                    ews = 2;
-                }
-                else if( valor>=41 && valor<=50 ){
-                    ews = 1;
-                }
-                else if( valor>=51 && valor<=100 ) {
-                    ews = 0;
-                }
-                else if( valor>=101 && valor<=110 ) {
-                    ews = 1;
-                }
-                else if( valor>=111 && valor<=129 ) {
-                    ews = 2;
-                }
-                else if( valor>=130 ){
-                    ews = 3;
-                }
-
-            // EWS Pulso
-            case ( "PULSE" ):
-                if( valor<=40 ){
-                    ews = 1;
-                }
-                else if( valor>=60 && valor<=100 ) {
-                    ews = 0;
-                }
-                else if( valor>=101 ) {
-                    ews = 1;
-                }
-
-            // Se não for nenhum dos casos acima
-            default:
-        }
-        return ews;
-    }
-
-    public void geraAlerta(int nivelAlerta) {
-        if ( nivelAlerta != 0 ) {
-            //LayoutInflater é utilizado para inflar nosso layout em uma view.
-            //-pegamos nossa instancia da classe
-            LayoutInflater li = getLayoutInflater();
-
-            //inflamos o layout alerta.xml na view
-            //View view = li.inflate(R.layout.alerta, null);
-            View view = li.inflate(R.layout.alerta1, null);
-            if (nivelAlerta == 1) {
-                view = li.inflate(R.layout.alerta1, null);
-            } else if (nivelAlerta == 2) {
-                view = li.inflate(R.layout.alerta2, null);
-            } else if (nivelAlerta == 3) {
-                view = li.inflate(R.layout.alerta3, null);
-            }
-
-            //definimos para o botão do layout um clickListener
-            view.findViewById(R.id.bt).setOnClickListener(new View.OnClickListener() {
-                public void onClick(View arg0) {
-                    //exibe um Toast informativo.
-                    Toast.makeText(Sinais_vitais.this, "alerta.dismiss()", Toast.LENGTH_SHORT).show();
-                    //desfaz o alerta.
-                    alerta.dismiss();
-                }
-            });
-
-            AlertDialog.Builder builder = new AlertDialog.Builder(this);
-            builder.setTitle("Alerta de paciente");
-            builder.setView(view);
-            alerta = builder.create();
-            alerta.show();
-        } //android:src="@drawable/alerta2"/>
     }
 }

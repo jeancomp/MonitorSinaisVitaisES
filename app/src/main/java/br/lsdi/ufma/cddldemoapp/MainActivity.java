@@ -1,17 +1,21 @@
 package br.lsdi.ufma.cddldemoapp;
 
-import android.hardware.Sensor;
+import android.app.AlertDialog;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.Spinner;
+import android.widget.TextView;
+import android.widget.Toast;
 
 import org.apache.commons.lang3.StringUtils;
 import org.greenrobot.eventbus.EventBus;
@@ -20,7 +24,6 @@ import org.greenrobot.eventbus.ThreadMode;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedReader;
-import java.io.ByteArrayInputStream;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -29,13 +32,14 @@ import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import br.ufma.lsdi.cddl.CDDL;
 import br.ufma.lsdi.cddl.Connection;
 import br.ufma.lsdi.cddl.ConnectionFactory;
 import br.ufma.lsdi.cddl.listeners.ISubscriberListener;
 import br.ufma.lsdi.cddl.message.Message;
+import br.ufma.lsdi.cddl.pubsub.Publisher;
+import br.ufma.lsdi.cddl.pubsub.PublisherFactory;
 import br.ufma.lsdi.cddl.pubsub.Subscriber;
 import br.ufma.lsdi.cddl.pubsub.SubscriberFactory;
 
@@ -51,11 +55,11 @@ public class MainActivity extends AppCompatActivity {
     private EditText filterEditText;
 
     private CDDL cddl;
-    private String email = "jean.marques@lsdi.ufma.br";
+    private String email = "jean.marques@lsdi.ufma.br";  // Observacao importante para topico definido: mhub/+/service_topic/my-service
     private List<String> sensorNames;
     private String currentSensor;
     private Subscriber subscriber;
-
+    private Publisher pub;
     private boolean filtering;
 
     public Handler handler = new Handler();
@@ -66,13 +70,15 @@ public class MainActivity extends AppCompatActivity {
     Button startButton;
     Button stopButton;
     Message msg = new Message();
+    String monitorCode;
+    public AlertDialog alerta;
     String ms;
     EventBus eb;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
+        setContentView(R.layout.activity_sub);
         eb = EventBus.builder().build();
         eb.register(this);
         if (savedInstanceState == null) {
@@ -91,8 +97,7 @@ public class MainActivity extends AppCompatActivity {
         try {
             is = new FileInputStream(caminho);
             reader = new BufferedReader(new InputStreamReader(is, StandardCharsets.UTF_8));
-        }
-        catch (FileNotFoundException e1) {
+        } catch (FileNotFoundException e1) {
             // TODO Auto-generated catch block
             e1.printStackTrace();
         }
@@ -100,7 +105,8 @@ public class MainActivity extends AppCompatActivity {
 
     private void configCDDL() {
         //Host leva o nome do microBroker
-        String host = CDDL.startMicroBroker();
+        //String host = CDDL.startMicroBroker();
+        String host = "broker.hivemq.com";
 
         //Abre conecção
         Connection connection = ConnectionFactory.createConnection();
@@ -115,20 +121,54 @@ public class MainActivity extends AppCompatActivity {
         cddl.startService();
         cddl.startCommunicationTechnology(CDDL.INTERNAL_TECHNOLOGY_ID);
 
+        pub = PublisherFactory.createPublisher();
+        pub.addConnection(cddl.getConnection());
+
         subscriber = SubscriberFactory.createSubscriber();
         subscriber.addConnection(cddl.getConnection());
-        //subscriber.subscribeServiceByPublisherId("jean.marques@lsdi.ufma.br");
+
+        subscriber.subscribeServiceByName("my-service");
         subscriber.setSubscriberListener(this::onMessage);
+
+        // EWS  Frequência  respiratória
+        // Sinal:RESP Valor: 15 >= x <= 20
+        monitorCode = subscriber.getMonitor().addRule("select * from Message where cast(serviceValue[0], string)='RESP' and cast(serviceValue[1], double)>=16 and cast(serviceValue[1], double)<=20", message -> {
+            new Thread() {
+                public void run() {
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            //atualizaTotalAlerta(t1,1);
+                            if(true) {
+                                System.out.println(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
+                                geraAlerta(1, msgAlerta(message));
+                            }
+                        }
+                    });
+                }
+            }.start();});
 
         //subscriber.setSubscriberListener(this::onMessageTopic);
     }
 
-    private void onMessage(Message message) {
+    public String msgAlerta(Message msg){
+        Object[] valor = msg.getServiceValue();
+        String mensagemRecebida = StringUtils.join(valor, ", ");
+        String ms = "";
+        ms = mensagemRecebida;
+        String[] sin = ms.split(";|;\\s");
+        //String ss = sin[0];
+        //double vv = Double.parseDouble(sin[1]);
+        return sin[0];
+    }
 
+    private void onMessage(Message message) {
+        ////Log.d("Topico Jean", message.getTopic());
+        //Log.d("Uuid Jean", message.getUuid());
         handler.post(() -> {
             Object[] valor = message.getServiceValue();
             //listViewMessages.add(0, StringUtils.join(valor, ", "));
-            listViewMessages.add(StringUtils.join(valor, ", "));
+            listViewMessages.add(StringUtils.join(valor[0], ", "));
             listViewAdapter.notifyDataSetChanged();
         });
     }
@@ -145,7 +185,7 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-    public void mensagemTela(String mm){
+    public void mensagemTela(String mm) {
         handler.post(() -> {
             Object valor = mm;
             //Log.d("TESTANDOSinaisVitais", ms);
@@ -163,8 +203,8 @@ public class MainActivity extends AppCompatActivity {
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void on(MessageEvent event) {
         Object[] valor = event.getMessage().getServiceValue();
-        Log.d("JEANNNNNN3333", (String)String.valueOf(valor));
-        listViewMessages.add(StringUtils.join((String)valor[0], ", "));
+        Log.d("JEANNNNNN3333", (String) String.valueOf(valor));
+        listViewMessages.add(StringUtils.join((String) valor[0], ", "));
     }
 
     @Override
@@ -211,7 +251,7 @@ public class MainActivity extends AppCompatActivity {
         listView.setAdapter(listViewAdapter);
     }
 
-    public void limpaListView(){
+    public void limpaListView() {
         listViewMessages.clear();
         listViewAdapter.notifyDataSetChanged();
     }
@@ -242,12 +282,13 @@ public class MainActivity extends AppCompatActivity {
         //subscriber.setSubscriberListener(this::onMessage);
         limpaListView();
         configArquivo();
-        readData(caminho);
+        lerMsg();
+        //readData(caminho);
     }
 
     private void stopCurrentSensor() {
         //if (currentSensor != null) {
-            //cddl.stopSensor(currentSensor);
+        //cddl.stopSensor(currentSensor);
         //}
     }
 
@@ -277,8 +318,7 @@ public class MainActivity extends AppCompatActivity {
             if (filtering) {
                 subscriber.clearFilter();
                 button.setText(R.string.filter_button_label);
-            }
-            else {
+            } else {
                 subscriber.setFilter(filterEditText.getText().toString());
                 button.setText(R.string.clear_filter_button_label);
             }
@@ -286,17 +326,17 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-    public void subscribeServiceByName(String m){
+    public void subscribeServiceByName(String m) {
         subscriber.subscribeServiceByName(m);
     }
 
-    public void setListener(ISubscriberListener listener){
+    public void setListener(ISubscriberListener listener) {
         subscriber.setSubscriberListener(listener);
     }
 
     // Método ler o arquivo coluna por coluna
     public void readDataByColumn(String caminho) {
-        try{
+        try {
             InputStream is = new BufferedInputStream(new FileInputStream(caminho));
             BufferedReader br = new BufferedReader(new InputStreamReader(is, StandardCharsets.UTF_8));
             String line = "";
@@ -304,7 +344,7 @@ public class MainActivity extends AppCompatActivity {
                 br.readLine();
                 while ((line = br.readLine()) != null) {
                     String[] cols = line.split(",");
-                    System.out.println("Sinais vitais: " + cols[0] );
+                    System.out.println("Sinais vitais: " + cols[0]);
 
                     // Passa a leitura do sensor para
                     //subscriber.setSubscriberListener(this::onMessage);
@@ -317,11 +357,24 @@ public class MainActivity extends AppCompatActivity {
             } catch (IOException e) {
                 e.printStackTrace();
             }
-        }
-        catch (FileNotFoundException e1) {
+        } catch (FileNotFoundException e1) {
             // TODO Auto-generated catch block
             e1.printStackTrace();
         }
+    }
+
+    // Método ler arquivo linha por linha
+    public void lerMsg() {
+        subscriber.subscribeServiceByName("my-service");
+        //subscriber.setSubscriberListener(this::onMessage);
+        Message msn = new Message();
+        //msn.setServiceName("my-service");
+        //msn.getServiceName();
+        //msn.setServiceName("my-service");
+        msn.getServiceValue();
+        //subscriber.subscribeServiceByName("my-service");
+        //subscriber.setSubscriberListener(this::onMessage);
+        onMessage(msn);
     }
 
     // Método ler arquivo linha por linha
@@ -358,5 +411,45 @@ public class MainActivity extends AppCompatActivity {
             // TODO Auto-generated catch block
             //e1.printStackTrace();
         //}
+    }
+
+    // Cria uma janela com alerta, informando o nível de degradação do paciente
+    public void geraAlerta(int nivelAlerta, String str) {
+        if ( nivelAlerta != 0 ) {
+            //LayoutInflater é utilizado para inflar nosso layout em uma view.
+            //-pegamos nossa instancia da classe
+            LayoutInflater li = getLayoutInflater();
+
+            //inflamos o layout alerta.xml na view
+            //View view = li.inflate(R.layout.alerta, null);
+            View view = li.inflate(R.layout.alerta1, null);
+            if (nivelAlerta == 1) {
+                view = li.inflate(R.layout.alerta1, null);
+            } else if (nivelAlerta == 2) {
+                view = li.inflate(R.layout.alerta2, null);
+            } else if (nivelAlerta == 3) {
+                view = li.inflate(R.layout.alerta3, null);
+            }
+
+            //definimos para o botão do layout um clickListener
+            view.findViewById(R.id.bt).setOnClickListener(new View.OnClickListener() {
+                public void onClick(View arg0) {
+                    //exibe um Toast informativo.
+                    Toast.makeText(MainActivity.this, "alerta", Toast.LENGTH_SHORT).show();
+                    //desfaz o alerta.
+                    //alerta.dismiss();
+                    alerta.cancel();
+                }
+            });
+
+            AlertDialog.Builder builder = new AlertDialog.Builder(this);
+            //builder.setTitle("Alerta de paciente");
+            View viewText = view;
+            TextView textView = viewText.findViewById(R.id.sinal);
+            textView.setText(str);
+            builder.setView(view);
+            alerta = builder.create();
+            alerta.show();
+        }
     }
 }
