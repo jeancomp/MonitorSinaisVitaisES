@@ -12,7 +12,7 @@ import java.nio.charset.StandardCharsets
 
 // caminho="/storage/emulated/0/Download/pacientes/055/05500001.csv"
 
-public class Ler_sinais_vitais {
+public class Ler_sinais_vitais_2 {
 
     // Método ler o arquivo coluna por coluna
     public void readDataByColumn(String caminho) {
